@@ -30,6 +30,7 @@ export const Stage6Roadmap: React.FC = () => {
 
   const quarters = ['Q1', 'Q2', 'Q3', 'Q4'] as const;
   const needsVisa = profile.targetCountries.some(country => country !== 'kz');
+  const applicationChecklists = roadmapTasks.filter(task => task.id.startsWith('apply-'));
 
   const handleToggle = (taskId: string, currentStatus: boolean) => {
     toggleTaskCompletion(taskId);
@@ -104,6 +105,12 @@ export const Stage6Roadmap: React.FC = () => {
             <div className="flex shrink-0 items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-950/50 px-3 py-2 text-[11px] text-zinc-300"><ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />Оффер → финансы → страховка → запись</div>
           </div>
         </section>
+      )}
+
+      {applicationChecklists.length === 0 && (
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 px-5 py-4 text-sm text-zinc-400">
+          Чек-листы документов появятся здесь после того, как вы выберете программы кнопкой «Сравнить» в рекомендациях.
+        </div>
       )}
 
       {/* Progress Summary Card */}

@@ -231,12 +231,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Реактивная генерация дорожной карты
   const roadmapTasks = useMemo(() => {
-    const rawTasks = generatePersonalRoadmap(profile, recommendations);
+    const rawTasks = generatePersonalRoadmap(profile, recommendations, comparedUniIds);
     return rawTasks.map(task => ({
       ...task,
       isCompleted: completedTaskIds.includes(task.id)
     }));
-  }, [profile, recommendations, completedTaskIds]);
+  }, [profile, recommendations, comparedUniIds, completedTaskIds]);
 
   const toggleTaskCompletion = (taskId: string) => {
     setCompletedTaskIds(prev =>

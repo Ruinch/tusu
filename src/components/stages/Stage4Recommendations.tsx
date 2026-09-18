@@ -149,7 +149,7 @@ export const Stage4Recommendations: React.FC = () => {
               }`}
             >
               {/* Header */}
-              <div className="p-5 sm:p-6 border-b border-zinc-800/80 flex flex-col md:flex-row md:items-start justify-between gap-4">
+              <div className="p-5 sm:p-6 border-b border-zinc-800/80 flex flex-col xl:flex-row xl:items-start justify-between gap-4">
                 <div className="space-y-1 flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-bold text-lg text-white">{uni.name}</h3>

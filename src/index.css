@@ -606,6 +606,15 @@
 .oxide-shell .punch-auth-action:hover { transform: translateY(-1px); border-color: var(--oxide-teal) !important; box-shadow: none; }
 .oxide-shell [class*="bg-emerald-"] { color: #0d1110 !important; background: var(--oxide-teal) !important; }
 
+/* The product uses the industrial palette, but surfaces are intentionally soft and modern. */
+.oxide-shell [class*="rounded-2xl"],
+.oxide-shell [class*="rounded-3xl"] { border-radius: 1.25rem !important; }
+.oxide-shell [class*="rounded-xl"] { border-radius: 1rem !important; }
+.oxide-shell [class*="rounded-lg"] { border-radius: .75rem !important; }
+.oxide-shell :is(button, input, select, textarea) { border-radius: .75rem !important; }
+.oxide-shell .punch-card { border-radius: 1.25rem !important; }
+.oxide-shell [class*="rounded-full"] { border-radius: 9999px !important; }
+
 @keyframes oxide-spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
 @keyframes oxide-pulse { 0%, 100% { opacity: .38; transform: scale(.8); } 50% { opacity: 1; transform: scale(1); } }
 @keyframes oxide-scan { 0%, 100% { opacity: .15; } 50% { opacity: .72; } }

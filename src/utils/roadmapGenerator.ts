@@ -6,13 +6,15 @@ import { getEntCombination } from '../data/entCombinations';
 
 const createTask = (data: Omit<RoadmapTask, 'isCompleted'>): RoadmapTask => ({ ...data, isCompleted: false });
 
-/** Builds a plan only from the user's countries, fields and matching programs. */
-export function generatePersonalRoadmap(profile: UserProfile, recommendations: ScoredRecommendation[]): RoadmapTask[] {
+/** Builds a plan from the student's explicitly selected programmes. */
+export function generatePersonalRoadmap(profile: UserProfile, recommendations: ScoredRecommendation[], selectedUniversityIds: string[] = []): RoadmapTask[] {
   const targetYear = profile.targetYear;
   const prepYear = targetYear - 1;
   const languageTest = getBestLanguageTest(profile);
-  const matching = recommendations.filter(({ university }) => profile.targetCountries.includes(university.country) && profile.fields.includes(university.field));
-  const targets = matching.slice(0, 3).map(item => item.university);
+  const selectedIds = new Set(selectedUniversityIds);
+  const targets = recommendations
+    .filter(({ university }) => selectedIds.has(university.id))
+    .map(item => item.university);
   const hasKz = profile.targetCountries.includes('kz');
   const hasInternational = profile.targetCountries.some(country => country !== 'kz');
   const minLanguage = Math.max(0, ...targets.map(uni => uni.minIelts));
@@ -60,8 +62,9 @@ export function generatePersonalRoadmap(profile: UserProfile, recommendations: S
     tasks.push(createTask({ id: 'kz-grant', quarter: 'Q4', quarterTitle: q4, title: 'Подать документы на конкурс государственных грантов РК', description: 'Подайте заявление через eGov или приемную комиссию, выбирая только группы программ, совместимые с комбинацией ЕНТ.', category: 'finance', dueDate: `${targetYear}-07-18`, dueLabel: `13–20 июля ${targetYear}`, priority: 'critical', actionGuide: 'Распределите выбор: мечта, реалистичные и надежный вариант в одном треке ЕНТ. Следите за ежегодным приказом о сроках.' }));
   }
 
-  // Каждая целевая программа получает собственный чек-лист документов и дедлайн,
-  // включая вузы РК, а не только прямые зарубежные заявки.
+  // A university-specific checklist exists only after the student explicitly adds
+  // that recommendation to comparison. This avoids presenting unchosen universities
+  // as though they were part of the student's admission plan.
   targets.forEach(uni => {
     const deadline = getDeadlineForTargetYear(uni.applicationDeadline, uni.deadlineLabel, targetYear);
     const checklist = getAdmissionChecklist(uni);
