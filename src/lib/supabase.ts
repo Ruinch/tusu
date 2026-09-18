@@ -1,5 +1,8 @@
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+declare const __TUSU_SUPABASE_URL__: string;
+declare const __TUSU_SUPABASE_PUBLIC_KEY__: string;
+
+const url = __TUSU_SUPABASE_URL__ || import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const anonKey = __TUSU_SUPABASE_PUBLIC_KEY__ || import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 const SESSION_KEY = 'tusu_supabase_session_v1';
 
 export const isSupabaseConfigured = Boolean(url && anonKey);

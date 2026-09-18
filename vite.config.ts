@@ -6,7 +6,15 @@ const CHACH_SYSTEM_PROMPT = 'Ты — образовательный совет�
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  // Vite only exposes VITE_* variables to browser code. These aliases also support
+  // the standard Supabase/Next names without exposing any server-only credentials.
+  const publicSupabaseUrl = env.VITE_SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || env.SUPABASE_URL || ''
+  const publicSupabaseKey = env.VITE_SUPABASE_ANON_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY || env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || ''
   return {
+    define: {
+      __TUSU_SUPABASE_URL__: JSON.stringify(publicSupabaseUrl),
+      __TUSU_SUPABASE_PUBLIC_KEY__: JSON.stringify(publicSupabaseKey)
+    },
     plugins: [
       react(),
       tailwindcss(),
