@@ -2,6 +2,7 @@ import { UserProfile, ScoredRecommendation, RoadmapTask } from '../types';
 import { getDeadlineForTargetYear } from './admissionCycle';
 import { getBestLanguageTest } from './recommendationEngine';
 import { getAdmissionChecklist } from './admissionChecklist';
+import { getEntCombination } from '../data/entCombinations';
 
 const createTask = (data: Omit<RoadmapTask, 'isCompleted'>): RoadmapTask => ({ ...data, isCompleted: false });
 
@@ -15,13 +16,18 @@ export function generatePersonalRoadmap(profile: UserProfile, recommendations: S
   const hasKz = profile.targetCountries.includes('kz');
   const hasInternational = profile.targetCountries.some(country => country !== 'kz');
   const minLanguage = Math.max(0, ...targets.map(uni => uni.minIelts));
-  const minSat = Math.max(0, ...targets.map(uni => uni.minSat ?? 0));
+  const minSat = Math.max(0, ...targets.filter(uni => uni.country !== 'kz').map(uni => uni.minSat ?? 0));
   const minEnt = Math.max(0, ...targets.filter(uni => uni.country === 'kz').map(uni => uni.minEnt ?? 0));
   const q1 = `Q1 (Сентябрь — Ноябрь ${prepYear}): подготовка`;
   const q2 = `Q2 (Декабрь — Февраль): документы и заявки`;
   const q3 = `Q3 (Март — Май ${targetYear}): экзамены и финансирование`;
   const q4 = `Q4 (Июнь — Август ${targetYear}): зачисление`;
   const tasks: RoadmapTask[] = [];
+  const entCombination = getEntCombination(profile.entCombination);
+
+  if (hasKz && entCombination) {
+    tasks.push(createTask({ id: 'ent-combination', quarter: 'Q1', quarterTitle: q1, title: `Закрепить трек ЕНТ: ${entCombination.subjects}`, description: `Этот сертификат открывает группы программ: ${entCombination.groups}. Не смешивайте его с несовпадающими группами при подаче.`, category: 'exams', dueDate: `${prepYear}-09-20`, dueLabel: `до 20 сентября ${prepYear}`, priority: 'critical', actionGuide: entCombination.specialNote ?? 'Сверяйте актуальный список групп образовательных программ и профильных предметов на сайте НЦТ.' }));
+  }
 
   if (minLanguage > 0 && (!languageTest || languageTest.ieltsEquivalent < minLanguage)) {
     tasks.push(createTask({ id: 'language-test', quarter: 'Q1', quarterTitle: q1, title: `Сдать IELTS / TOEFL: ориентир IELTS ${minLanguage}+`, description: `Сертификат нужен для: ${targets.filter(uni => uni.minIelts > 0).map(uni => uni.name).join(', ')}.`, category: 'exams', dueDate: `${prepYear}-10-25`, dueLabel: `до 25 октября ${prepYear}`, priority: 'critical', actionGuide: 'Сверьте, какие именно сертификаты принимает каждая программа, до регистрации.' }));
@@ -51,7 +57,7 @@ export function generatePersonalRoadmap(profile: UserProfile, recommendations: S
   }
 
   if (hasKz && targets.some(uni => !uni.admissionRoute || uni.admissionRoute === 'kz_grant')) {
-    tasks.push(createTask({ id: 'kz-grant', quarter: 'Q4', quarterTitle: q4, title: 'Подать документы на конкурс государственных грантов РК', description: 'Подайте заявление через eGov или приемную комиссию, выбрав нужные группы программ и вузы.', category: 'finance', dueDate: `${targetYear}-07-18`, dueLabel: `13–20 июля ${targetYear}`, priority: 'critical', actionGuide: 'Распределите выбор: мечта, реалистичные и надежный вариант в своем направлении.' }));
+    tasks.push(createTask({ id: 'kz-grant', quarter: 'Q4', quarterTitle: q4, title: 'Подать документы на конкурс государственных грантов РК', description: 'Подайте заявление через eGov или приемную комиссию, выбирая только группы программ, совместимые с комбинацией ЕНТ.', category: 'finance', dueDate: `${targetYear}-07-18`, dueLabel: `13–20 июля ${targetYear}`, priority: 'critical', actionGuide: 'Распределите выбор: мечта, реалистичные и надежный вариант в одном треке ЕНТ. Следите за ежегодным приказом о сроках.' }));
   }
 
   // Каждая целевая программа получает собственный чек-лист документов и дедлайн,

@@ -1,7 +1,8 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { getEarliestTargetYear } from '../../utils/admissionCycle';
-import { StudyField, TargetCountry, BudgetTier, EducationLevel, UserProfile } from '../../types';
+import { AdmissionScope, StudyField, TargetCountry, BudgetTier, EducationLevel, UserProfile } from '../../types';
+import { ENT_COMBINATIONS, getEntCombination } from '../../data/entCombinations';
 import {
   User,
   GraduationCap,
@@ -37,13 +38,18 @@ const TARGET_COUNTRIES: { id: TargetCountry; label: string; flag: string; hint: 
 export const Stage2Profile: React.FC = () => {
   const { profile, updateProfile, setCurrentStage } = useApp();
   const targetYears = Array.from({ length: 3 }, (_, index) => getEarliestTargetYear() + index);
-  const isProfileComplete = profile.name.trim().length > 0 && profile.fields.length > 0 && profile.targetCountries.length > 0;
+  const admissionScope = profile.admissionScope ?? (profile.targetCountries.includes('kz') && profile.targetCountries.some(country => country !== 'kz') ? 'both' : profile.targetCountries.includes('kz') ? 'kz' : 'international');
+  const isKzOnly = admissionScope === 'kz';
+  const isInternationalOnly = admissionScope === 'international';
+  const selectedEntCombination = getEntCombination(profile.entCombination);
+  const isProfileComplete = profile.name.trim().length > 0 && profile.fields.length > 0 && profile.targetCountries.length > 0 && (!isKzOnly || Boolean(profile.entCombination));
   // Старые сохранения иногда содержали строку вместо числа. Нормализуем значение
   // перед выводом, чтобы 6.0 / 7.0 / 8.0 всегда были видны в интерфейсе.
   const parsedIelts = typeof profile.ielts === 'number' ? profile.ielts : Number(profile.ielts);
   const hasIelts = Number.isFinite(parsedIelts) && parsedIelts > 0;
 
   const handleFieldToggle = (field: StudyField) => {
+    if (isKzOnly && selectedEntCombination && !selectedEntCombination.fields.includes(field)) return;
     const current = profile.fields;
     if (current.includes(field)) {
       updateProfile({ fields: current.filter((f) => f !== field) });
@@ -60,6 +66,22 @@ export const Stage2Profile: React.FC = () => {
       updateProfile({ targetCountries: [...current, country] });
     }
   };
+
+  const chooseAdmissionScope = (scope: AdmissionScope) => {
+    const countries = scope === 'kz' ? ['kz'] as TargetCountry[] : scope === 'international' ? profile.targetCountries.filter(country => country !== 'kz') : profile.targetCountries;
+    updateProfile({ admissionScope: scope, targetCountries: countries, entCombination: scope === 'international' ? undefined : profile.entCombination });
+  };
+
+  const chooseEntCombination = (id: NonNullable<UserProfile['entCombination']>) => {
+    const combination = getEntCombination(id);
+    if (!combination) return;
+    const compatibleExisting = profile.fields.filter(field => combination.fields.includes(field));
+    updateProfile({ admissionScope: 'kz', targetCountries: ['kz'], entCombination: id, fields: compatibleExisting.length > 0 ? compatibleExisting : combination.fields });
+  };
+
+  const visibleStudyFields = isKzOnly && selectedEntCombination
+    ? STUDY_FIELDS.filter(field => selectedEntCombination.fields.includes(field.id))
+    : STUDY_FIELDS;
 
   return (
     <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto space-y-8 animate-in fade-in duration-300">
@@ -134,18 +156,35 @@ export const Stage2Profile: React.FC = () => {
           </div>
         </div>
 
-        {/* Section 2: Направления */}
+        {/* Section 2: Сценарий поступления */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-zinc-300 border-b border-zinc-800 pb-2">
+            <GraduationCap className="w-3.5 h-3.5 text-zinc-400" />
+            <span>02. Где вы планируете поступать?</span>
+          </div>
+          <p className="text-xs leading-relaxed text-zinc-400">Это разделяет логику: в Казахстане подбор строится вокруг комбинации ЕНТ и конкурса грантов; за рубежом — вокруг языка, академического профиля и правил конкретного вуза.</p>
+          <div className="grid gap-3 md:grid-cols-3">
+            {[
+              { id: 'kz' as AdmissionScope, title: 'Казахстан', text: 'ЕНТ, группы программ, государственный грант, прямой контракт и внутренние экзамены вузов.' },
+              { id: 'international' as AdmissionScope, title: 'Зарубеж', text: 'IELTS / TOEFL, SAT только если нужен, документы, виза и требования каждой страны.' },
+              { id: 'both' as AdmissionScope, title: 'Казахстан + зарубеж', text: 'Два независимых набора задач: ЕНТ для РК и международная заявка для выбранных стран.' },
+            ].map(item => <button key={item.id} type="button" onClick={() => chooseAdmissionScope(item.id)} className={`p-4 rounded-xl border text-left transition-all ${admissionScope === item.id ? 'bg-zinc-800/90 border-zinc-400 text-white' : 'bg-zinc-950/70 border-zinc-800 text-zinc-400 hover:border-zinc-700'}`}><div className="text-sm font-semibold">{item.title}</div><div className="mt-1 text-[11px] leading-relaxed">{item.text}</div></button>)}
+          </div>
+          {!isInternationalOnly && <div className="rounded-xl border border-sky-900/60 bg-sky-950/15 p-4"><div className="text-sm font-semibold text-sky-200">Выберите комбинацию профильных предметов ЕНТ</div><p className="mt-1 text-xs text-zinc-400">Подаваться можно только на группы образовательных программ с той же комбинацией, что указана в сертификате ЕНТ.</p><div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{ENT_COMBINATIONS.map(combo => <button key={combo.id} type="button" onClick={() => chooseEntCombination(combo.id)} className={`rounded-lg border p-3 text-left ${profile.entCombination === combo.id ? 'border-sky-400 bg-sky-950/60 text-white' : 'border-zinc-800 bg-zinc-950/70 text-zinc-300 hover:border-zinc-600'}`}><div className="text-xs font-semibold">{combo.subjects}</div><div className="mt-1 text-[11px] text-sky-300">{combo.title}</div><div className="mt-1 text-[10px] leading-relaxed text-zinc-400">{combo.groups}</div>{combo.specialNote && <div className="mt-1 text-[10px] text-amber-300">{combo.specialNote}</div>}</button>)}</div></div>}
+        </div>
+
+        {/* Section 3: Направления */}
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
             <div className="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-zinc-300">
               <BookOpen className="w-3.5 h-3.5 text-zinc-400" />
-              <span>02. Приоритетные специальности</span>
+              <span>03. Приоритетные специальности</span>
             </div>
             <span className="text-[11px] font-mono text-zinc-400">Мультивыбор</span>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-            {STUDY_FIELDS.map((field) => {
+            {visibleStudyFields.map((field) => {
               const isSelected = profile.fields.includes(field.id);
               return (
                 <button
@@ -166,11 +205,11 @@ export const Stage2Profile: React.FC = () => {
           </div>
         </div>
 
-        {/* Section 3: Экзамены и академические баллы */}
+        {/* Section 4: Экзамены и академические баллы */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-zinc-300 border-b border-zinc-800 pb-2">
             <GraduationCap className="w-3.5 h-3.5 text-zinc-400" />
-            <span>03. Академическая успеваемость и экзамены</span>
+            <span>04. Академическая успеваемость и экзамены</span>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -208,6 +247,7 @@ export const Stage2Profile: React.FC = () => {
               </select>
             </div>
 
+            {!isKzOnly && <>
             {/* IELTS */}
             <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800/80 space-y-2">
               <div className="flex items-center justify-between">
@@ -273,6 +313,7 @@ export const Stage2Profile: React.FC = () => {
               />
             </div>
 
+            </>}
             {/* ЕНТ */}
             <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800/80 space-y-2">
               <div className="flex items-center justify-between">
@@ -292,6 +333,7 @@ export const Stage2Profile: React.FC = () => {
                 placeholder="Напр. 115"
                 className="w-full px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-xs"
               />
+              {!isInternationalOnly && <div className="text-[10px] leading-relaxed text-sky-300">{selectedEntCombination ? `${selectedEntCombination.subjects}. ${selectedEntCombination.specialNote ?? 'Баллы и конкурс на грант меняются ежегодно.'}` : 'Сначала выберите комбинацию профильных предметов выше.'}</div>}
             </div>
           </div>
 
@@ -387,12 +429,17 @@ export const Stage2Profile: React.FC = () => {
               Комфортный бюджет на обучение в год:
             </label>
             <div className="grid sm:grid-cols-4 gap-2.5">
-              {[
+              {(isKzOnly ? [
+                { id: 'grant_only', label: 'Только государственный грант', desc: 'Конкурс грантов РК и целевые гранты' },
+                { id: 'low_5k', label: 'Контракт до 2,5 млн ₸ / год', desc: 'Региональные и частные вузы Казахстана' },
+                { id: 'mid_15k', label: 'Контракт 2,5–7,5 млн ₸ / год', desc: 'Частные и международные программы в РК' },
+                { id: 'high_30k_plus', label: 'Бюджет не ограничен', desc: 'Любой вариант в Казахстане' },
+              ] : [
                 { id: 'grant_only', label: '100% Грант / $0', desc: 'Только программы со стипендией или бюджетом' },
                 { id: 'low_5k', label: 'До $5,000 / год', desc: 'Доступный контракт (вузы РК, Италия, Германия)' },
                 { id: 'mid_15k', label: 'До $15,000 / год', desc: 'Средний бюджет в Европе и Азии' },
                 { id: 'high_30k_plus', label: '$30,000+ / год', desc: 'США и топовые международные программы' },
-              ].map((b) => (
+              ]).map((b) => (
                 <button
                   key={b.id}
                   type="button"
@@ -411,12 +458,12 @@ export const Stage2Profile: React.FC = () => {
           </div>
 
           {/* Страны */}
-          <div className="space-y-2 pt-2">
+          {!isKzOnly && <div className="space-y-2 pt-2">
             <label className="block text-xs font-medium text-zinc-300">
               Приоритетные страны:
             </label>
             <div className="grid sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-              {TARGET_COUNTRIES.map((tc) => {
+              {TARGET_COUNTRIES.filter(tc => admissionScope === 'both' || tc.id !== 'kz').map((tc) => {
                 const isSelected = profile.targetCountries.includes(tc.id);
                 return (
                   <button
@@ -439,7 +486,7 @@ export const Stage2Profile: React.FC = () => {
                 );
               })}
             </div>
-          </div>
+          </div>}
         </div>
       </div>
 
@@ -456,7 +503,7 @@ export const Stage2Profile: React.FC = () => {
         <div className="flex flex-col items-end gap-1.5">
           {!isProfileComplete && (
             <p className="text-right text-[11px] text-amber-300">
-              Укажите имя, хотя бы одно направление и страну, чтобы получить персональный расчёт.
+              Укажите имя, направление и {isKzOnly ? 'комбинацию ЕНТ' : 'страну'}, чтобы получить персональный расчёт.
             </p>
           )}
           <button

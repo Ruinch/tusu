@@ -40,12 +40,12 @@ const MainContent: React.FC = () => {
 export function App() {
   return (
     <AppProvider>
-      <div className="punch-shell aristocrat-shell min-h-screen bg-[#09090b] text-zinc-100 selection:bg-amber-200 selection:text-zinc-950 font-sans">
+      <div className="punch-shell oxide-shell min-h-screen bg-[#09090b] text-zinc-100 selection:bg-amber-200 selection:text-zinc-950 font-sans">
         <div className="punch-terminal min-h-screen flex flex-col">
           <Navbar />
-          <div className="punch-masthead" aria-label="TUSU AI private admissions">
-            <div className="punch-masthead-mark">◇</div>
-            <div><div className="punch-system-title">TUSU<span>.AI</span></div><div className="punch-system-subtitle">PRIVATE ADMISSIONS · EST. 2026</div></div>
+          <div className="punch-masthead" aria-label="TUSU AI admissions control plane">
+            <div className="punch-masthead-mark">◉</div>
+            <div><div className="punch-system-title">TUSU<span>.AI</span></div><div className="punch-system-subtitle">ADMISSIONS CONTROL PLANE · KZ / GLOBAL</div></div>
           </div>
           <Stepper />
           <MainContent />

@@ -1,6 +1,5 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { UNIVERSITIES } from '../../data/universities';
 import { getDeadlineForTargetYear } from '../../utils/admissionCycle';
 import {
   GitCompare,
@@ -20,8 +19,10 @@ export const Stage5Compare: React.FC = () => {
     recommendations
   } = useApp();
 
-  const comparedUnis = UNIVERSITIES.filter(u => comparedUniIds.includes(u.id));
   const comparedRecommendations = recommendations.filter(rec => comparedUniIds.includes(rec.university.id));
+  // Comparison is intentionally limited to the personalised results from step 4.
+  // Old IDs can remain in local storage after a profile changes, so do not render them.
+  const comparedUnis = comparedRecommendations.map(rec => rec.university);
   const bestOption = comparedRecommendations[0]?.university;
   const nextBestOption = comparedRecommendations[1]?.university;
   const isReady = comparedUnis.length >= 2;
@@ -44,26 +45,6 @@ export const Stage5Compare: React.FC = () => {
           </p>
         </div>
 
-        {/* Quick Add Chips */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs text-zinc-400 font-mono">Добавить:</span>
-          {UNIVERSITIES.slice(0, 5).map((u) => {
-            const isSel = comparedUniIds.includes(u.id);
-            return (
-              <button
-                key={u.id}
-                onClick={() => toggleCompareUni(u.id)}
-                className={`px-2.5 py-1 rounded text-xs font-medium transition-colors cursor-pointer ${
-                  isSel
-                    ? 'bg-zinc-100 text-zinc-950 font-bold'
-                    : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
-                }`}
-              >
-                {u.name.split(' ')[0]} {isSel ? '✓' : '+'}
-              </button>
-            );
-          })}
-        </div>
       </div>
 
       {!isReady ? (
@@ -71,7 +52,7 @@ export const Stage5Compare: React.FC = () => {
           <HelpCircle className="w-8 h-8 text-zinc-400 mx-auto" />
           <h3 className="text-base font-semibold text-white">Выберите минимум 2 университета для сравнения</h3>
           <p className="text-xs text-zinc-400 max-w-sm mx-auto">
-            Используйте кнопки «Добавить к сравнению» на этапе рекомендаций или чипсы вверху страницы.
+            Вернитесь к персональным рекомендациям и выберите там минимум два подходящих варианта.
           </p>
           <button
             onClick={() => setCurrentStage(4)}

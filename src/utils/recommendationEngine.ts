@@ -1,5 +1,6 @@
 import { UserProfile, UniversityProgram, ScoredRecommendation, DiagnosticReport, RecommendationTier } from '../types';
 import { UNIVERSITIES } from '../data/universities';
+import { getEntCombination } from '../data/entCombinations';
 
 /**
  * Нормализация GPA к 5-балльной шкале для сопоставления
@@ -35,8 +36,17 @@ export function computeRecommendations(
   const normGpa = normalizeGpa(profile.gpa, profile.gpaScale);
   const languageTest = getBestLanguageTest(profile);
   const extraExams = profile.additionalExams ?? {};
+  const entCombination = getEntCombination(profile.entCombination);
+  const scopedUniversities = universities.filter(uni => {
+    if (profile.admissionScope === 'kz' && uni.country !== 'kz') return false;
+    if (profile.admissionScope === 'international' && uni.country === 'kz') return false;
+    // A Kazakhstan application is valid only when the program belongs to the
+    // field family opened by the selected ENT subject combination.
+    if (uni.country === 'kz' && entCombination && !entCombination.fields.includes(uni.field)) return false;
+    return true;
+  });
 
-  const scoredList: ScoredRecommendation[] = universities.map((uni) => {
+  const scoredList: ScoredRecommendation[] = scopedUniversities.map((uni) => {
     let score = 50; // Базовый скор
     const matchReasons: string[] = [];
     const risks: string[] = [];
@@ -69,20 +79,20 @@ export function computeRecommendations(
     }
 
     // 4. Языковой тест (IELTS)
-    if (uni.minIelts > 0 && languageTest && languageTest.ieltsEquivalent >= uni.minIelts) {
+    if (uni.country !== 'kz' && uni.minIelts > 0 && languageTest && languageTest.ieltsEquivalent >= uni.minIelts) {
       score += 15;
       matchReasons.push(`${languageTest.label} закрывает языковое требование (эквивалент IELTS ${uni.minIelts}+)`);
-    } else if (uni.minIelts > 0 && languageTest) {
+    } else if (uni.country !== 'kz' && uni.minIelts > 0 && languageTest) {
       score -= 15;
       risks.push(`${languageTest.label} ниже требуемого языкового уровня (эквивалент IELTS ${uni.minIelts}+)`);
-    } else if (uni.minIelts > 0) {
+    } else if (uni.country !== 'kz' && uni.minIelts > 0) {
       // IELTS не сдан
       risks.push(`Сертификат IELTS пока не сдан (для поступления нужен балл от ${uni.minIelts})`);
       score -= 10;
     }
 
     // 5. Тесты SAT и ЕНТ
-    if (uni.minSat) {
+    if (uni.minSat && uni.country !== 'kz') {
       if (profile.sat && profile.sat >= uni.minSat) {
         score += 15;
         matchReasons.push(`Балл SAT ${profile.sat} конкурентен для отбора (мин. ${uni.minSat})`);
@@ -113,10 +123,10 @@ export function computeRecommendations(
       matchReasons.push(`A-Level / UCAS Tariff (${extraExams.a_level_ucas}) усиливает академический профиль.`);
     }
 
-    if (uni.minEnt) {
+    if (uni.country === 'kz' && uni.minEnt) {
       if (profile.ent && profile.ent >= uni.minEnt) {
         score += 20;
-        matchReasons.push(`Балл ЕНТ ${profile.ent} дает высокие шансы на государственный грант`);
+        matchReasons.push(`Балл ЕНТ ${profile.ent} выше ориентира программы; конкурс грантов остаётся отдельным конкурсом`);
       } else if (profile.ent && profile.ent < uni.minEnt) {
         score -= 20;
         risks.push(`Балл ЕНТ ${profile.ent} рискован для гранта (желательно ${uni.minEnt}+)`);
@@ -208,7 +218,7 @@ export function computeRecommendations(
           : `Стоимость обучения составляет ~$${uni.tuitionUsdPerYear} в год + проживание ~$${uni.livingCostUsdPerYear}.`,
         careerFit: uni.careerProspects
       },
-      risksAndBottlenecks: risks.length > 0 ? risks : ['Высокая конкуренция среди иностранных аппликантов.'],
+      risksAndBottlenecks: risks.length > 0 ? risks : [uni.country === 'kz' ? 'Конкурс на грант зависит от результатов других абитуриентов и ежегодных правил.' : 'Высокая конкуренция среди иностранных аппликантов.'],
       scholarshipOpportunities: scholarships
     };
   });

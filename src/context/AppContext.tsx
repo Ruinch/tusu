@@ -47,6 +47,8 @@ const DEFAULT_PROFILE: UserProfile = {
   gpa: 3.0,
   gpaScale: '5.0',
   targetCountries: [],
+  admissionScope: undefined,
+  entCombination: undefined,
   budget: 'grant_only',
   ielts: null,
   sat: null,
@@ -65,7 +67,7 @@ const STORAGE_KEY_TASKS = 'admitroute_tasks_completed_v1';
 const STORAGE_KEY_COMPARE = 'admitroute_compare_v1';
 
 const isProfileComplete = (profile: UserProfile) => (
-  profile.name.trim().length > 0 && profile.fields.length > 0 && profile.targetCountries.length > 0
+  profile.name.trim().length > 0 && profile.fields.length > 0 && profile.targetCountries.length > 0 && (profile.admissionScope !== 'kz' || Boolean(profile.entCombination))
 );
 
 const loadStoredProfile = (): UserProfile => {
@@ -86,7 +88,7 @@ const loadStoredProfile = (): UserProfile => {
 };
 
 const ROADMAP_INPUT_KEYS: (keyof UserProfile)[] = [
-  'level', 'targetYear', 'fields', 'gpa', 'gpaScale', 'targetCountries', 'budget',
+  'level', 'targetYear', 'fields', 'gpa', 'gpaScale', 'targetCountries', 'admissionScope', 'entCombination', 'budget',
   'ielts', 'sat', 'ent', 'toefl', 'duolingo', 'additionalExams', 'olympiadLevel', 'hasVolunteeringOrProjects'
 ];
 

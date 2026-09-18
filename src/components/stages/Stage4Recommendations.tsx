@@ -14,7 +14,8 @@ import {
   ArrowRight,
   ArrowLeft,
   ShieldCheck,
-  Filter
+  Filter,
+  ChevronDown
 } from 'lucide-react';
 
 export const Stage4Recommendations: React.FC = () => {
@@ -30,6 +31,7 @@ export const Stage4Recommendations: React.FC = () => {
 
   const [activeTierFilter, setActiveTierFilter] = useState<'all' | RecommendationTier>('all');
   const [selectedCountryFilter, setSelectedCountryFilter] = useState<string>('all');
+  const [expandedUniId, setExpandedUniId] = useState<string | null>(null);
 
   const filteredRecommendations = recommendations.filter(rec => {
     const matchesTier = activeTierFilter === 'all' || rec.tier === activeTierFilter;
@@ -129,8 +131,8 @@ export const Stage4Recommendations: React.FC = () => {
         </div>
       </div>
 
-      {/* Program Cards Grid */}
-      <div className="space-y-4">
+      {/* Compact catalogue: details are opened only for the programme the user is studying. */}
+      <div className="grid gap-4 lg:grid-cols-2">
         {filteredRecommendations.map((rec) => {
           const uni = rec.university;
           const deadline = getDeadlineForTargetYear(uni.applicationDeadline, uni.deadlineLabel, profile.targetYear);
@@ -140,7 +142,7 @@ export const Stage4Recommendations: React.FC = () => {
           return (
             <div
               key={uni.id}
-              className={`rounded-2xl border transition-all overflow-hidden bg-zinc-900/40 backdrop-blur-sm ${
+              className={`rounded-2xl border transition-all overflow-hidden bg-zinc-900/40 backdrop-blur-sm ${expandedUniId === uni.id ? 'lg:col-span-2' : ''} ${
                 isCompared
                   ? 'border-zinc-500 bg-zinc-900/80 shadow-md'
                   : 'border-zinc-800/90 hover:border-zinc-700'
@@ -166,15 +168,35 @@ export const Stage4Recommendations: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="shrink-0 rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-2">
+                <div className="flex shrink-0 items-center gap-2">
+                  <button
+                    onClick={() => toggleCompareUni(uni.id)}
+                    className={`rounded-lg border px-2.5 py-2 text-xs font-medium transition-colors ${isCompared ? 'border-zinc-100 bg-zinc-100 text-zinc-950' : 'border-zinc-700 bg-zinc-950/60 text-zinc-300 hover:bg-zinc-800'}`}
+                  >
+                    <GitCompare className="mr-1 inline h-3.5 w-3.5" />{isCompared ? 'Выбран' : 'Сравнить'}
+                  </button>
+                  <button
+                    onClick={() => setExpandedUniId(current => current === uni.id ? null : uni.id)}
+                    aria-expanded={expandedUniId === uni.id}
+                    className="rounded-lg border border-zinc-800 bg-zinc-950/60 px-2.5 py-2 text-xs text-zinc-300 hover:bg-zinc-800"
+                  >
+                    {expandedUniId === uni.id ? 'Свернуть' : 'Детали'} <ChevronDown className={`ml-1 inline h-3.5 w-3.5 transition-transform ${expandedUniId === uni.id ? 'rotate-180' : ''}`} />
+                  </button>
+                  <div className="hidden rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-2 lg:block">
+                    <div className="text-[11px] text-zinc-400 font-mono">
+                      Статус требований: <span className="text-zinc-200 font-medium">{rec.chanceCategory}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="shrink-0 rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-2 lg:hidden">
                   <div className="text-[11px] text-zinc-400 font-mono">
                     Статус требований: <span className="text-zinc-200 font-medium">{rec.chanceCategory}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Body */}
-              <div className="p-5 sm:p-6 space-y-4">
+              {/* Detailed data is deliberately collapsed so a large catalogue is quick to scan. */}
+              {expandedUniId === uni.id && <div className="p-5 sm:p-6 space-y-4">
                 <div className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
                   <div className="p-4 rounded-xl bg-zinc-950/70 border border-zinc-800 space-y-1.5">
                     <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Маршрут подачи</div>
@@ -322,7 +344,7 @@ export const Stage4Recommendations: React.FC = () => {
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
-              </div>
+              </div>}
             </div>
           );
         })}

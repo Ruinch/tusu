@@ -24,6 +24,7 @@ export type BudgetTier = 'grant_only' | 'low_5k' | 'mid_15k' | 'high_30k_plus';
 export type ScholarshipCoverage = 'full' | 'partial' | 'competitive';
 export type AdmissionRoute = 'nu_internal' | 'kz_grant' | 'kz_direct' | 'military_service' | 'international_direct';
 export type AdditionalExamKey = 'nuet' | 'ib' | 'a_level_ucas' | 'gre' | 'gmat';
+export type AdmissionScope = 'kz' | 'international' | 'both';
 
 export interface UserProfile {
   name: string;
@@ -33,6 +34,10 @@ export interface UserProfile {
   gpa: number; // on 5.0 or 4.0 scale
   gpaScale: '4.0' | '5.0';
   targetCountries: TargetCountry[];
+  /** First routing decision: domestic ENT flow, international applications, or both. */
+  admissionScope?: AdmissionScope;
+  /** Kazakhstan flow only: profile-subject combination selected for ENT. */
+  entCombination?: import('../data/entCombinations').EntCombinationId;
   budget: BudgetTier;
   // Exams and scores
   ielts: number | null; // e.g. 7.0

@@ -97,8 +97,8 @@ export const AccountHub: React.FC = () => {
     const next = [...messages, { role: 'user' as const, text }]; setMessages(next);
     if (!educationWords.some(word => text.toLowerCase().includes(word))) { setMessages([...next, { role: 'assistant', text: OFFTOPIC }]); return; }
     setLoading(true);
-    try { const response = await fetch('/api/chach', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: next.filter(m => m.role === 'user') }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error); setMessages([...next, { role: 'assistant', text: data.text }]); }
-    catch { setMessages([...next, { role: 'assistant', text: 'Chach пока не подключён. Добавьте ANTHROPIC_API_KEY в окружение сервера, и я смогу отвечать на вопросы.' }]); }
+    try { const response = await fetch('/api/chach', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: next }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error); setMessages([...next, { role: 'assistant', text: data.text }]); }
+    catch { setMessages([...next, { role: 'assistant', text: 'Chach пока не подключён. Добавьте GEMINI_API_KEY в переменные окружения Vercel и передеплойте проект.' }]); }
     finally { setLoading(false); }
   };
   const finishMbti = (answers: string[]) => {

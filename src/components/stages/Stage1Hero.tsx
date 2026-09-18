@@ -15,19 +15,21 @@ export const Stage1Hero: React.FC = () => {
   return (
     <div className="py-12 md:py-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-12">
       {/* Hero Header */}
-      <div className="punch-card punch-hero aristocrat-hero text-center space-y-6 max-w-4xl mx-auto px-6 py-16 sm:px-16 sm:py-24">
+      <div className="punch-card punch-hero oxide-hero text-center space-y-6 max-w-6xl mx-auto px-6 py-16 sm:px-16 sm:py-24">
 
-        <div className="aristocrat-stars" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></div>
-        <div className="aristocrat-ornament">— ◇ —</div>
-        <div className="punch-kicker">ВАШ ЛИЧНЫЙ МАРШРУТ · KZ / GLOBAL</div>
+        <div className="oxide-telemetry" aria-hidden="true"><i /><i /><i /><i /><i /></div>
+        <div className="oxide-status"><span /> SYSTEM ONLINE · ADMISSIONS ENGINE V1.0</div>
+        <div className="punch-kicker">ТВОЯ ЦЕЛЬ · ТВОИ ДАННЫЕ · ТВОЙ МАРШРУТ</div>
 
-        <h1 className="aristocrat-title anim-fade-in-up anim-delay-1 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
-          Поступай <span>осознанно.</span>
+        <h1 className="oxide-title anim-fade-in-up anim-delay-1 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
+          Поступление<br /><span>без догадок.</span>
         </h1>
 
         <p className="anim-fade-in-up anim-delay-2 text-base sm:text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed">
           Анкета за 3 минуты → персональная диагностика → подбор вузов с шансами и стипендиями → пошаговый план до зачисления.
         </p>
+
+        <div className="oxide-diagram anim-fade-in-up anim-delay-3" aria-label="Схема работы TUSU AI"><span>PROFILE</span><b>→</b><span>ANALYSIS</span><b>→</b><span>ROUTE</span><b>→</b><span>ADMISSION</span></div>
 
         {/* CTA Buttons */}
         <div className="anim-fade-in-up anim-delay-3 flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
