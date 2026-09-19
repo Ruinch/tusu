@@ -1,5 +1,6 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { Check } from 'lucide-react';
 
 interface StepInfo {
@@ -8,18 +9,15 @@ interface StepInfo {
   subtitle: string;
 }
 
-const STEPS: StepInfo[] = [
-  { number: 1, title: 'Вход', subtitle: 'О сервисе' },
-  { number: 2, title: 'Профиль', subtitle: 'Анкета' },
-  { number: 3, title: 'Диагностика', subtitle: 'Аудит' },
-  { number: 4, title: 'Рекомендации', subtitle: 'Вузы' },
-  { number: 5, title: 'Сравнение', subtitle: 'Матрица' },
-  { number: 6, title: 'Roadmap', subtitle: 'План' },
-  { number: 7, title: 'Следующий шаг', subtitle: 'Фокус' }
-];
-
 export const Stepper: React.FC = () => {
   const { currentStage, setCurrentStage } = useApp();
+  const { t } = useLanguage();
+  const steps: StepInfo[] = [
+    { number: 1, title: t('login'), subtitle: t('service') }, { number: 2, title: t('profile'), subtitle: t('form') },
+    { number: 3, title: t('diagnostics'), subtitle: t('audit') }, { number: 4, title: t('recommendations'), subtitle: t('universities') },
+    { number: 5, title: t('comparison'), subtitle: t('matrix') }, { number: 6, title: t('roadmap'), subtitle: t('plan') },
+    { number: 7, title: t('nextStep'), subtitle: t('focus') }
+  ];
 
   return (
     <div className="w-full bg-[#09090b] border-b border-zinc-800/80 py-2.5 px-4 sm:px-6">
@@ -28,10 +26,10 @@ export const Stepper: React.FC = () => {
         <div className="sm:hidden flex flex-col gap-2">
           <div className="flex items-center justify-between text-xs">
             <span className="font-mono text-zinc-400">
-              Шаг {currentStage} из 7
+              {t('step')} {currentStage} / 7
             </span>
             <span className="font-semibold text-zinc-200">
-              {STEPS[currentStage - 1].title} — {STEPS[currentStage - 1].subtitle}
+              {steps[currentStage - 1].title} — {steps[currentStage - 1].subtitle}
             </span>
           </div>
           <div className="w-full bg-zinc-800 h-1 rounded-full overflow-hidden">
@@ -41,7 +39,7 @@ export const Stepper: React.FC = () => {
             />
           </div>
           <div className="flex items-center gap-1.5 overflow-x-auto py-1 no-scrollbar">
-            {STEPS.map((step) => (
+            {steps.map((step) => (
               <button
                 key={step.number}
                 onClick={() => setCurrentStage(step.number)}
@@ -62,7 +60,7 @@ export const Stepper: React.FC = () => {
         {/* Desktop Pipeline View */}
         <nav aria-label="Progress" className="hidden sm:block">
           <ol className="flex items-center justify-between gap-2 w-full">
-            {STEPS.map((step) => {
+            {steps.map((step) => {
               const isCurrent = currentStage === step.number;
               const isPast = currentStage > step.number;
 

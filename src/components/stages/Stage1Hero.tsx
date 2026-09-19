@@ -1,5 +1,6 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { DEMO_PRESETS } from '../../data/presets';
 import {
   ArrowRight,
@@ -11,6 +12,7 @@ import {
 
 export const Stage1Hero: React.FC = () => {
   const { setCurrentStage, loadPreset } = useApp();
+  const { t } = useLanguage();
 
   return (
     <div className="py-12 md:py-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-12">
@@ -22,11 +24,11 @@ export const Stage1Hero: React.FC = () => {
         <div className="punch-kicker">ТВОЯ ЦЕЛЬ · ТВОИ ДАННЫЕ · ТВОЙ МАРШРУТ</div>
 
         <h1 className="oxide-title anim-fade-in-up anim-delay-1 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
-          Поступление<br /><span>без догадок.</span>
+          {t('routeLead')}<br /><span>{t('routeAccent')}</span>
         </h1>
 
         <p className="anim-fade-in-up anim-delay-2 text-base sm:text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-          Анкета за 3 минуты → персональная диагностика → подбор вузов с шансами и стипендиями → пошаговый план до зачисления.
+          {t('routeDescription')}
         </p>
 
         <div className="oxide-diagram anim-fade-in-up anim-delay-3" aria-label="Схема работы TUSU AI"><span>PROFILE</span><b>→</b><span>ANALYSIS</span><b>→</b><span>ROUTE</span><b>→</b><span>ADMISSION</span></div>
@@ -37,7 +39,7 @@ export const Stage1Hero: React.FC = () => {
             onClick={() => setCurrentStage(2)}
             className="punch-primary w-full sm:w-auto px-7 py-3.5 rounded-xl bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-sm shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 group cursor-pointer"
           >
-            <span>Построить маршрут</span>
+            <span>{t('buildRoute')}</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </button>
 

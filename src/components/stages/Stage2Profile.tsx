@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { getEarliestTargetYear } from '../../utils/admissionCycle';
 import { AdmissionScope, StudyField, TargetCountry, BudgetTier, EducationLevel, UserProfile } from '../../types';
 import { ENT_COMBINATIONS, getEntCombination } from '../../data/entCombinations';
+import { useLanguage } from '../../context/LanguageContext';
 import {
   User,
   GraduationCap,
@@ -37,6 +38,7 @@ const TARGET_COUNTRIES: { id: TargetCountry; label: string; flag: string; hint: 
 
 export const Stage2Profile: React.FC = () => {
   const { profile, updateProfile, setCurrentStage } = useApp();
+  const { t } = useLanguage();
   const targetYears = Array.from({ length: 3 }, (_, index) => getEarliestTargetYear() + index);
   const admissionScope = profile.admissionScope ?? (profile.targetCountries.includes('kz') && profile.targetCountries.some(country => country !== 'kz') ? 'both' : profile.targetCountries.includes('kz') ? 'kz' : 'international');
   const isKzOnly = admissionScope === 'kz';
@@ -47,6 +49,16 @@ export const Stage2Profile: React.FC = () => {
   // перед выводом, чтобы 6.0 / 7.0 / 8.0 всегда были видны в интерфейсе.
   const parsedIelts = typeof profile.ielts === 'number' ? profile.ielts : Number(profile.ielts);
   const hasIelts = Number.isFinite(parsedIelts) && parsedIelts > 0;
+
+  const clampScore = (rawValue: string, min: number, max: number, step = 1) => {
+    if (!rawValue) return null;
+    const value = Number(rawValue);
+    if (!Number.isFinite(value)) return null;
+    const stepped = step > 1 ? Math.round(value / step) * step : value;
+    return Math.min(max, Math.max(min, stepped));
+  };
+
+  const canKeepScore = (rawValue: string, max: number) => !rawValue || (Number.isFinite(Number(rawValue)) && Number(rawValue) <= max);
 
   const handleFieldToggle = (field: StudyField) => {
     if (isKzOnly && selectedEntCombination && !selectedEntCombination.fields.includes(field)) return;
@@ -84,7 +96,7 @@ export const Stage2Profile: React.FC = () => {
     : STUDY_FIELDS;
 
   return (
-    <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto space-y-8 animate-in fade-in duration-300">
+    <div className="profile-page py-8 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto space-y-8 animate-in fade-in duration-300">
       {/* Step Header */}
       <div className="space-y-1.5">
         <div className="flex items-center gap-2 font-mono text-xs text-zinc-400">
@@ -93,14 +105,14 @@ export const Stage2Profile: React.FC = () => {
           <span>ДИНАМИЧЕСКИЙ РАСЧЕТ</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-          Параметры абитуриента и академические цели
+          {t('profileTitle')}
         </h1>
         <p className="text-sm text-zinc-400">
-          Изменение каждого параметра напрямую влияет на матрицу соответствия и пошаговый роадмап.
+          {t('profileDescription')}
         </p>
       </div>
 
-      <div className="bg-zinc-900/40 border border-zinc-800/90 rounded-2xl p-6 sm:p-8 space-y-8 backdrop-blur-sm">
+      <div className="profile-form-shell bg-zinc-900/40 border border-zinc-800/90 rounded-2xl p-6 sm:p-8 space-y-8 backdrop-blur-sm">
         {/* Section 1: Базовые данные */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-zinc-300 border-b border-zinc-800 pb-2">
@@ -160,15 +172,15 @@ export const Stage2Profile: React.FC = () => {
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-zinc-300 border-b border-zinc-800 pb-2">
             <GraduationCap className="w-3.5 h-3.5 text-zinc-400" />
-            <span>02. Где вы планируете поступать?</span>
+            <span>02. {t('whereApply')}</span>
           </div>
           <p className="text-xs leading-relaxed text-zinc-400">Это разделяет логику: в Казахстане подбор строится вокруг комбинации ЕНТ и конкурса грантов; за рубежом — вокруг языка, академического профиля и правил конкретного вуза.</p>
           <div className="grid gap-3 md:grid-cols-3">
             {[
-              { id: 'kz' as AdmissionScope, title: 'Казахстан', text: 'ЕНТ, группы программ, государственный грант, прямой контракт и внутренние экзамены вузов.' },
-              { id: 'international' as AdmissionScope, title: 'Зарубеж', text: 'IELTS / TOEFL, SAT только если нужен, документы, виза и требования каждой страны.' },
-              { id: 'both' as AdmissionScope, title: 'Казахстан + зарубеж', text: 'Два независимых набора задач: ЕНТ для РК и международная заявка для выбранных стран.' },
-            ].map(item => <button key={item.id} type="button" onClick={() => chooseAdmissionScope(item.id)} className={`p-4 rounded-xl border text-left transition-all ${admissionScope === item.id ? 'bg-zinc-800/90 border-zinc-400 text-white' : 'bg-zinc-950/70 border-zinc-800 text-zinc-400 hover:border-zinc-700'}`}><div className="text-sm font-semibold">{item.title}</div><div className="mt-1 text-[11px] leading-relaxed">{item.text}</div></button>)}
+              { id: 'kz' as AdmissionScope, title: t('kazakhstan'), text: 'ЕНТ, группы программ, государственный грант, прямой контракт и внутренние экзамены вузов.' },
+              { id: 'international' as AdmissionScope, title: t('abroad'), text: 'IELTS / TOEFL, SAT только если нужен, документы, виза и требования каждой страны.' },
+              { id: 'both' as AdmissionScope, title: t('both'), text: 'Два независимых набора задач: ЕНТ для РК и международная заявка для выбранных стран.' },
+            ].map(item => <button key={item.id} type="button" aria-pressed={admissionScope === item.id} onClick={() => chooseAdmissionScope(item.id)} className={`choice-card p-4 rounded-xl border text-left transition-all ${admissionScope === item.id ? 'choice-card--selected text-white' : 'bg-zinc-950/70 border-zinc-800 text-zinc-400 hover:border-zinc-700'}`}><div className="flex items-center justify-between gap-3 text-sm font-semibold"><span>{item.title}</span>{admissionScope === item.id && <span className="choice-selection-mark"><Check className="h-3.5 w-3.5" /></span>}</div><div className="mt-1 text-[11px] leading-relaxed">{item.text}</div></button>)}
           </div>
           {!isInternationalOnly && <div className="rounded-xl border border-sky-900/60 bg-sky-950/15 p-4"><div className="text-sm font-semibold text-sky-200">Выберите комбинацию профильных предметов ЕНТ</div><p className="mt-1 text-xs text-zinc-400">Подаваться можно только на группы образовательных программ с той же комбинацией, что указана в сертификате ЕНТ.</p><div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{ENT_COMBINATIONS.map(combo => <button key={combo.id} type="button" onClick={() => chooseEntCombination(combo.id)} className={`rounded-lg border p-3 text-left ${profile.entCombination === combo.id ? 'border-sky-400 bg-sky-950/60 text-white' : 'border-zinc-800 bg-zinc-950/70 text-zinc-300 hover:border-zinc-600'}`}><div className="text-xs font-semibold">{combo.subjects}</div><div className="mt-1 text-[11px] text-sky-300">{combo.title}</div><div className="mt-1 text-[10px] leading-relaxed text-zinc-400">{combo.groups}</div>{combo.specialNote && <div className="mt-1 text-[10px] text-amber-300">{combo.specialNote}</div>}</button>)}</div></div>}
         </div>
@@ -191,14 +203,14 @@ export const Stage2Profile: React.FC = () => {
                   key={field.id}
                   type="button"
                   onClick={() => handleFieldToggle(field.id)}
-                  className={`p-3 rounded-xl text-left border transition-all flex items-center justify-between cursor-pointer ${
+                  className={`choice-card p-3 rounded-xl text-left border transition-all flex items-center justify-between cursor-pointer ${
                     isSelected
-                      ? 'bg-zinc-800/90 border-zinc-500 text-white shadow-sm'
+                      ? 'choice-card--selected text-white shadow-sm'
                       : 'bg-zinc-950/70 border-zinc-800/80 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
                   }`}
                 >
                   <span className="text-xs font-medium">{field.label}</span>
-                  {isSelected && <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 ml-2" />}
+                  {isSelected && <span className="choice-selection-mark shrink-0 ml-2"><Check className="w-3.5 h-3.5" /></span>}
                 </button>
               );
             })}
@@ -279,7 +291,7 @@ export const Stage2Profile: React.FC = () => {
                 <span className="text-xs text-zinc-400 font-medium">TOEFL iBT</span>
                 <span className="text-xs font-mono font-bold text-zinc-100">{profile.toefl ?? 'Нет'}</span>
               </div>
-              <input type="number" min="0" max="120" value={profile.toefl ?? ''} onChange={(e) => updateProfile({ toefl: e.target.value ? parseInt(e.target.value) : null })} placeholder="Напр. 90" className="w-full px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-xs" />
+              <input type="number" min="0" max="120" value={profile.toefl ?? ''} onChange={(e) => canKeepScore(e.target.value, 120) && updateProfile({ toefl: e.target.value ? parseInt(e.target.value) : null })} onBlur={(e) => updateProfile({ toefl: clampScore(e.target.value, 0, 120) })} placeholder="0–120, напр. 90" className="w-full px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-xs" />
             </div>
 
             {/* Duolingo */}
@@ -288,7 +300,7 @@ export const Stage2Profile: React.FC = () => {
                 <span className="text-xs text-zinc-400 font-medium">Duolingo English Test</span>
                 <span className="text-xs font-mono font-bold text-zinc-100">{profile.duolingo ?? 'Нет'}</span>
               </div>
-              <input type="number" min="10" max="160" step="5" value={profile.duolingo ?? ''} onChange={(e) => updateProfile({ duolingo: e.target.value ? parseInt(e.target.value) : null })} placeholder="Напр. 120" className="w-full px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-xs" />
+              <input type="number" min="10" max="160" step="5" value={profile.duolingo ?? ''} onChange={(e) => canKeepScore(e.target.value, 160) && updateProfile({ duolingo: e.target.value ? parseInt(e.target.value) : null })} onBlur={(e) => updateProfile({ duolingo: clampScore(e.target.value, 10, 160, 5) })} placeholder="10–160, шаг 5" className="w-full px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-xs" />
             </div>
 
             {/* SAT */}
@@ -305,10 +317,9 @@ export const Stage2Profile: React.FC = () => {
                 max="1600"
                 step="10"
                 value={profile.sat || ''}
-                onChange={(e) =>
-                  updateProfile({ sat: e.target.value ? parseInt(e.target.value) : null })
-                }
-                placeholder="Напр. 1350"
+                onChange={(e) => canKeepScore(e.target.value, 1600) && updateProfile({ sat: e.target.value ? parseInt(e.target.value) : null })}
+                onBlur={(e) => updateProfile({ sat: clampScore(e.target.value, 800, 1600, 10) })}
+                placeholder="800–1600, шаг 10"
                 className="w-full px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-xs"
               />
             </div>
@@ -327,10 +338,9 @@ export const Stage2Profile: React.FC = () => {
                 min="0"
                 max="140"
                 value={profile.ent || ''}
-                onChange={(e) =>
-                  updateProfile({ ent: e.target.value ? parseInt(e.target.value) : null })
-                }
-                placeholder="Напр. 115"
+                onChange={(e) => canKeepScore(e.target.value, 140) && updateProfile({ ent: e.target.value ? parseInt(e.target.value) : null })}
+                onBlur={(e) => updateProfile({ ent: clampScore(e.target.value, 0, 140) })}
+                placeholder="0–140, напр. 115"
                 className="w-full px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-xs"
               />
               {!isInternationalOnly && <div className="text-[10px] leading-relaxed text-sky-300">{selectedEntCombination ? `${selectedEntCombination.subjects}. ${selectedEntCombination.specialNote ?? 'Баллы и конкурс на грант меняются ежегодно.'}` : 'Сначала выберите комбинацию профильных предметов выше.'}</div>}
@@ -361,7 +371,8 @@ export const Stage2Profile: React.FC = () => {
                     min={min}
                     max={max}
                     value={profile.additionalExams?.[key] ?? ''}
-                    onChange={(e) => updateProfile({ additionalExams: { ...profile.additionalExams, [key]: e.target.value ? Number(e.target.value) : undefined } })}
+                    onChange={(e) => canKeepScore(e.target.value, max) && updateProfile({ additionalExams: { ...profile.additionalExams, [key]: e.target.value ? Number(e.target.value) : undefined } })}
+                    onBlur={(e) => updateProfile({ additionalExams: { ...profile.additionalExams, [key]: clampScore(e.target.value, min, max) ?? undefined } })}
                     placeholder={placeholder}
                     className="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-2.5 py-1.5 text-xs text-white outline-none focus:border-zinc-500"
                   />
@@ -420,13 +431,13 @@ export const Stage2Profile: React.FC = () => {
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-zinc-300 border-b border-zinc-800 pb-2">
             <DollarSign className="w-3.5 h-3.5 text-zinc-400" />
-            <span>04. Финансовые рамки и география</span>
+            <span>05. {t('financial')}</span>
           </div>
 
           {/* Бюджет */}
           <div className="space-y-2">
             <label className="block text-xs font-medium text-zinc-300">
-              Комфортный бюджет на обучение в год:
+              {t('budget')}
             </label>
             <div className="grid sm:grid-cols-4 gap-2.5">
               {(isKzOnly ? [
@@ -444,13 +455,13 @@ export const Stage2Profile: React.FC = () => {
                   key={b.id}
                   type="button"
                   onClick={() => updateProfile({ budget: b.id as BudgetTier })}
-                  className={`p-3 rounded-xl text-left border transition-all cursor-pointer ${
+                  className={`choice-card p-3 rounded-xl text-left border transition-all cursor-pointer ${
                     profile.budget === b.id
-                      ? 'bg-zinc-800/90 border-zinc-400 text-white shadow-sm'
+                      ? 'choice-card--selected text-white shadow-sm'
                       : 'bg-zinc-950/70 border-zinc-800/80 text-zinc-400 hover:border-zinc-700'
                   }`}
                 >
-                  <div className="text-xs font-semibold text-zinc-200">{b.label}</div>
+                  <div className="flex items-center justify-between gap-2 text-xs font-semibold text-zinc-200"><span>{b.label}</span>{profile.budget === b.id && <span className="choice-selection-mark"><Check className="h-3.5 w-3.5" /></span>}</div>
                   <div className="text-[11px] text-zinc-400 mt-0.5">{b.desc}</div>
                 </button>
               ))}
@@ -460,7 +471,7 @@ export const Stage2Profile: React.FC = () => {
           {/* Страны */}
           {!isKzOnly && <div className="space-y-2 pt-2">
             <label className="block text-xs font-medium text-zinc-300">
-              Приоритетные страны:
+              {t('countries')}
             </label>
             <div className="grid sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
               {TARGET_COUNTRIES.filter(tc => admissionScope === 'both' || tc.id !== 'kz').map((tc) => {
@@ -470,15 +481,15 @@ export const Stage2Profile: React.FC = () => {
                     key={tc.id}
                     type="button"
                     onClick={() => handleCountryToggle(tc.id)}
-                    className={`p-3 rounded-xl text-left border transition-all cursor-pointer ${
+                    className={`choice-card p-3 rounded-xl text-left border transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-zinc-800/90 border-zinc-400 text-white shadow-sm'
+                        ? 'choice-card--selected text-white shadow-sm'
                         : 'bg-zinc-950/70 border-zinc-800/80 text-zinc-400 hover:border-zinc-700'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-mono text-[10px] text-zinc-400 font-bold">{tc.flag}</span>
-                      {isSelected && <Check className="w-3 h-3 text-emerald-400" />}
+                      {isSelected && <span className="choice-selection-mark"><Check className="w-3 h-3" /></span>}
                     </div>
                     <div className="text-xs font-semibold text-zinc-200 mt-1">{tc.label}</div>
                     <div className="text-[10px] text-zinc-400 mt-0.5 line-clamp-1">{tc.hint}</div>
@@ -497,7 +508,7 @@ export const Stage2Profile: React.FC = () => {
           className="px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-medium border border-zinc-800 flex items-center gap-2 cursor-pointer transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Назад</span>
+          <span>{t('back')}</span>
         </button>
 
         <div className="flex flex-col items-end gap-1.5">

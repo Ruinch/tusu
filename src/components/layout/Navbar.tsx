@@ -1,5 +1,6 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
+import { AppLanguage, useLanguage } from '../../context/LanguageContext';
 import { DEMO_PRESETS } from '../../data/presets';
 import {
   Calendar,
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
+  const { language, setLanguage, t } = useLanguage();
   const {
     currentStage,
     setCurrentStage,
@@ -33,12 +35,19 @@ export const Navbar: React.FC = () => {
             TU
           </div>
           <span className="font-extrabold text-base tracking-tight text-zinc-100">
-            TUSU<span className="text-zinc-500 font-semibold">.AI</span>
+            TUSU<span className="text-emerald-400 font-semibold">.AI</span>
           </span>
         </div>
 
         {/* Action Controls */}
         <div className="flex items-center gap-2 sm:gap-3">
+          <div className="language-switcher" aria-label={t('language')}>
+            {(['ru', 'kk', 'en'] as AppLanguage[]).map((option) => (
+              <button key={option} type="button" onClick={() => setLanguage(option)} aria-pressed={language === option} className={language === option ? 'language-switcher__active' : ''}>
+                {option.toUpperCase()}
+              </button>
+            ))}
+          </div>
           {/* Quick Jury Presets Dropdown */}
           <div className="hidden relative group">
             <button
@@ -86,7 +95,7 @@ export const Navbar: React.FC = () => {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 hover:border-zinc-700 transition-colors cursor-pointer"
           >
             <FileText className="w-3.5 h-3.5 text-zinc-400" />
-            <span className="hidden md:inline">Советник по эссе</span>
+            <span className="hidden md:inline">{t('essayAdvisor')}</span>
           </button>
 
           {/* Calendar Export */}
@@ -95,14 +104,14 @@ export const Navbar: React.FC = () => {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 hover:border-zinc-700 transition-colors cursor-pointer"
           >
             <Calendar className="w-3.5 h-3.5 text-zinc-400" />
-            <span className="hidden sm:inline">Календарь</span>
+            <span className="hidden sm:inline">{t('calendar')}</span>
           </button>
 
           {/* Progress bar */}
           {currentStage >= 3 && (
             <div className="hidden lg:flex items-center gap-2 pl-3 border-l border-zinc-800">
               <div className="text-right">
-                <div className="text-[10px] font-mono text-zinc-400">Прогресс</div>
+                <div className="text-[10px] font-mono text-zinc-400">{t('progress')}</div>
                 <div className="text-xs font-mono font-bold text-zinc-200">{progressPercentage}%</div>
               </div>
               <div className="w-14 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
@@ -126,7 +135,7 @@ export const Navbar: React.FC = () => {
             className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-lg transition-colors cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Начать заново</span>
+            <span className="hidden sm:inline">{t('startOver')}</span>
           </button>
 
           <button
@@ -135,7 +144,7 @@ export const Navbar: React.FC = () => {
             title="Открыть личный кабинет"
           >
             <UserRound className="w-3.5 h-3.5 text-zinc-400" />
-            <span className="hidden md:inline">Кабинет</span>
+            <span className="hidden md:inline">{t('account')}</span>
           </button>
         </div>
       </div>

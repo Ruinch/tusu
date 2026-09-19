@@ -98,7 +98,10 @@ export const AccountHub: React.FC = () => {
     if (!educationWords.some(word => text.toLowerCase().includes(word))) { setMessages([...next, { role: 'assistant', text: OFFTOPIC }]); return; }
     setLoading(true);
     try { const response = await fetch('/api/chach', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: next }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error); setMessages([...next, { role: 'assistant', text: data.text }]); }
-    catch { setMessages([...next, { role: 'assistant', text: 'Chach пока не подключён. Добавьте GEMINI_API_KEY в переменные окружения Vercel и передеплойте проект.' }]); }
+    catch (error) {
+      const reason = error instanceof Error && error.message ? error.message : 'Не удалось связаться с сервером';
+      setMessages([...next, { role: 'assistant', text: `Chach пока не ответил: ${reason}. Проверьте GEMINI_API_KEY, модель Gemini и логи Vercel, затем передеплойте проект.` }]);
+    }
     finally { setLoading(false); }
   };
   const finishMbti = (answers: string[]) => {

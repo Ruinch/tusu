@@ -13,6 +13,7 @@ import { Stage7NextAction } from './components/stages/Stage7NextAction';
 import { AccountHub } from './components/extra/AccountHub';
 import { AuthGate } from './components/extra/AuthGate';
 import { Dashboard } from './components/dashboard/Dashboard';
+import { LanguageProvider } from './context/LanguageContext';
 
 const EssayAdvisorModal = lazy(() => import('./components/extra/EssayAdvisorModal').then(module => ({ default: module.EssayAdvisorModal })));
 const CalendarExportModal = lazy(() => import('./components/extra/CalendarExportModal').then(module => ({ default: module.CalendarExportModal })));
@@ -39,6 +40,7 @@ const MainContent: React.FC = () => {
 
 export function App() {
   return (
+    <LanguageProvider>
     <AppProvider>
       <div className="punch-shell oxide-shell min-h-screen bg-[#09090b] text-zinc-100 selection:bg-amber-200 selection:text-zinc-950 font-sans">
         <div className="punch-terminal min-h-screen flex flex-col">
@@ -62,6 +64,7 @@ export function App() {
         </div>
       </div>
     </AppProvider>
+    </LanguageProvider>
   );
 }
 
