@@ -117,13 +117,13 @@ export const Stage2Profile: React.FC = () => {
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-zinc-300 border-b border-zinc-800 pb-2">
             <User className="w-3.5 h-3.5 text-zinc-400" />
-            <span>01. Текущий статус и сроки</span>
+            <span>01. {t('currentStatus')}</span>
           </div>
 
           <div className="grid sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-medium text-zinc-300 mb-1.5">
-                Имя абитуриента
+                {t('applicantName')}
               </label>
               <input
                 type="text"
@@ -136,7 +136,7 @@ export const Stage2Profile: React.FC = () => {
 
             <div>
               <label className="block text-xs font-medium text-zinc-300 mb-1.5">
-                Текущий класс / Статус
+                {t('currentGrade')}
               </label>
               <select
                 value={profile.level}
@@ -153,7 +153,7 @@ export const Stage2Profile: React.FC = () => {
 
             <div>
               <label className="block text-xs font-medium text-zinc-300 mb-1.5">
-                Год начала учебы в вузе
+                {t('startYear')}
               </label>
               <select
                 value={profile.targetYear}
@@ -174,12 +174,12 @@ export const Stage2Profile: React.FC = () => {
             <GraduationCap className="w-3.5 h-3.5 text-zinc-400" />
             <span>02. {t('whereApply')}</span>
           </div>
-          <p className="text-xs leading-relaxed text-zinc-400">Это разделяет логику: в Казахстане подбор строится вокруг комбинации ЕНТ и конкурса грантов; за рубежом — вокруг языка, академического профиля и правил конкретного вуза.</p>
+          <p className="text-xs leading-relaxed text-zinc-400">{t('scopeDescription')}</p>
           <div className="grid gap-3 md:grid-cols-3">
             {[
-              { id: 'kz' as AdmissionScope, title: t('kazakhstan'), text: 'ЕНТ, группы программ, государственный грант, прямой контракт и внутренние экзамены вузов.' },
-              { id: 'international' as AdmissionScope, title: t('abroad'), text: 'IELTS / TOEFL, SAT только если нужен, документы, виза и требования каждой страны.' },
-              { id: 'both' as AdmissionScope, title: t('both'), text: 'Два независимых набора задач: ЕНТ для РК и международная заявка для выбранных стран.' },
+              { id: 'kz' as AdmissionScope, title: t('kazakhstan'), text: t('scopeKz') },
+              { id: 'international' as AdmissionScope, title: t('abroad'), text: t('scopeAbroad') },
+              { id: 'both' as AdmissionScope, title: t('both'), text: t('scopeBoth') },
             ].map(item => <button key={item.id} type="button" aria-pressed={admissionScope === item.id} onClick={() => chooseAdmissionScope(item.id)} className={`choice-card p-4 rounded-xl border text-left transition-all ${admissionScope === item.id ? 'choice-card--selected text-white' : 'bg-zinc-950/70 border-zinc-800 text-zinc-400 hover:border-zinc-700'}`}><div className="flex items-center justify-between gap-3 text-sm font-semibold"><span>{item.title}</span>{admissionScope === item.id && <span className="choice-selection-mark"><Check className="h-3.5 w-3.5" /></span>}</div><div className="mt-1 text-[11px] leading-relaxed">{item.text}</div></button>)}
           </div>
           {!isInternationalOnly && <div className="rounded-xl border border-sky-900/60 bg-sky-950/15 p-4"><div className="text-sm font-semibold text-sky-200">Выберите комбинацию профильных предметов ЕНТ</div><p className="mt-1 text-xs text-zinc-400">Подаваться можно только на группы образовательных программ с той же комбинацией, что указана в сертификате ЕНТ.</p><div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{ENT_COMBINATIONS.map(combo => <button key={combo.id} type="button" onClick={() => chooseEntCombination(combo.id)} className={`rounded-lg border p-3 text-left ${profile.entCombination === combo.id ? 'border-sky-400 bg-sky-950/60 text-white' : 'border-zinc-800 bg-zinc-950/70 text-zinc-300 hover:border-zinc-600'}`}><div className="text-xs font-semibold">{combo.subjects}</div><div className="mt-1 text-[11px] text-sky-300">{combo.title}</div><div className="mt-1 text-[10px] leading-relaxed text-zinc-400">{combo.groups}</div>{combo.specialNote && <div className="mt-1 text-[10px] text-amber-300">{combo.specialNote}</div>}</button>)}</div></div>}
