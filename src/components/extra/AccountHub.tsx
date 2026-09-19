@@ -100,7 +100,8 @@ export const AccountHub: React.FC = () => {
     try { const response = await fetch('/api/chach', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: next }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error); setMessages([...next, { role: 'assistant', text: data.text }]); }
     catch (error) {
       const reason = error instanceof Error && error.message ? error.message : 'Не удалось связаться с сервером';
-      setMessages([...next, { role: 'assistant', text: `Chach пока не ответил: ${reason}. Проверьте GEMINI_API_KEY, модель Gemini и логи Vercel, затем передеплойте проект.` }]);
+      const isBusy = /high demand|temporar|503|429|unavailable/i.test(reason);
+      setMessages([...next, { role: 'assistant', text: isBusy ? 'Gemini сейчас занят. Chach автоматически попробовал резервную модель — повторите вопрос через несколько секунд.' : `Chach пока не ответил: ${reason}. Проверьте GEMINI_API_KEY и логи Vercel.` }]);
     }
     finally { setLoading(false); }
   };

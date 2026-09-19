@@ -27,21 +27,32 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
   if (!messages.some(message => message.role === 'user')) return res.status(400).json({ error: 'At least one user message is required' });
 
   try {
-    const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-        contents: messages.map(({ role, text }) => ({ role: role === 'assistant' ? 'model' : 'user', parts: [{ text: text.slice(0, 4000) }] })),
-        generationConfig: { temperature: 0.45, maxOutputTokens: 800 },
-      }),
-    });
-    const data = await response.json() as { candidates?: { content?: { parts?: { text?: string }[] } }[]; error?: { message?: string } };
-    if (!response.ok) return res.status(502).json({ error: data.error?.message || 'Gemini request failed' });
-    const text = data.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('').trim();
-    if (!text) return res.status(502).json({ error: 'Gemini did not return an answer' });
-    return res.status(200).json({ text });
+    const models = [...new Set([process.env.GEMINI_MODEL, 'gemini-2.5-flash', 'gemini-2.5-flash-lite'].filter(Boolean))] as string[];
+    let lastError = 'Gemini is temporarily unavailable';
+    for (const model of models) {
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+            contents: messages.map(({ role, text }) => ({ role: role === 'assistant' ? 'model' : 'user', parts: [{ text: text.slice(0, 4000) }] })),
+            generationConfig: { temperature: 0.45, maxOutputTokens: 800 },
+          }),
+        });
+        const data = await response.json() as { candidates?: { content?: { parts?: { text?: string }[] } }[]; error?: { message?: string } };
+        if (response.ok) {
+          const text = data.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('').trim();
+          if (text) return res.status(200).json({ text });
+          lastError = 'Gemini did not return an answer';
+          break;
+        }
+        lastError = data.error?.message || 'Gemini request failed';
+        if (response.status !== 429 && response.status !== 503) break;
+        if (attempt === 0) await new Promise(resolve => setTimeout(resolve, 450));
+      }
+    }
+    return res.status(503).json({ error: lastError, retryable: true });
   } catch {
     return res.status(502).json({ error: 'Could not reach Gemini' });
   }

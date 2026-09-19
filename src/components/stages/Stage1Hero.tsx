@@ -4,9 +4,6 @@ import { useLanguage } from '../../context/LanguageContext';
 import { DEMO_PRESETS } from '../../data/presets';
 import {
   ArrowRight,
-  Clock,
-  GraduationCap,
-  ShieldCheck,
   Sparkles
 } from 'lucide-react';
 
@@ -17,12 +14,9 @@ export const Stage1Hero: React.FC = () => {
   return (
     <div className="py-12 md:py-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-12">
       {/* Hero Header */}
-      <div className="punch-card punch-hero oxide-hero text-center space-y-6 max-w-6xl mx-auto px-6 py-16 sm:px-16 sm:py-24">
+      <div className="punch-card punch-hero oxide-hero text-center space-y-7 max-w-6xl mx-auto px-6 py-20 sm:px-16 sm:py-28">
 
         <div className="oxide-telemetry" aria-hidden="true"><i /><i /><i /><i /><i /></div>
-        <div className="oxide-status"><span /> SYSTEM ONLINE · ADMISSIONS ENGINE V1.0</div>
-        <div className="punch-kicker">ТВОЯ ЦЕЛЬ · ТВОИ ДАННЫЕ · ТВОЙ МАРШРУТ</div>
-
         <h1 className="oxide-title anim-fade-in-up anim-delay-1 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
           {t('routeLead')}<br /><span>{t('routeAccent')}</span>
         </h1>
@@ -30,8 +24,6 @@ export const Stage1Hero: React.FC = () => {
         <p className="anim-fade-in-up anim-delay-2 text-base sm:text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed">
           {t('routeDescription')}
         </p>
-
-        <div className="oxide-diagram anim-fade-in-up anim-delay-3" aria-label="Схема работы TUSU AI"><span>PROFILE</span><b>→</b><span>ANALYSIS</span><b>→</b><span>ROUTE</span><b>→</b><span>ADMISSION</span></div>
 
         {/* CTA Buttons */}
         <div className="anim-fade-in-up anim-delay-3 flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
@@ -52,21 +44,6 @@ export const Stage1Hero: React.FC = () => {
           </button>
         </div>
 
-        {/* Quick Highlights */}
-        <div className="anim-fade-in-up anim-delay-4 flex flex-wrap items-center justify-center gap-6 pt-3 text-xs font-mono text-zinc-500">
-          <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5" />
-            <span>3 мин</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <GraduationCap className="w-3.5 h-3.5" />
-            <span>KZ + EU + Asia + US</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Гранты и стипендии</span>
-          </div>
-        </div>
       </div>
 
       {/* Compact Jury Presets Row */}
