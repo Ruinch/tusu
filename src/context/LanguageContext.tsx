@@ -82,18 +82,78 @@ const legacyCopy: Record<string, { kk: string; en: string }> = {
 type LanguageContextValue = { language: AppLanguage; setLanguage: (language: AppLanguage) => void; t: (key: keyof typeof dictionaries.ru) => string };
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 const STORAGE_KEY = 'tusu_language_v1';
+const TRANSLATION_CACHE_KEY = 'tusu_interface_translations_v1';
+type TranslationCache = Partial<Record<AppLanguage, Record<string, string>>>;
+
+const readTranslationCache = (): TranslationCache => {
+  try { return JSON.parse(localStorage.getItem(TRANSLATION_CACHE_KEY) || '{}') as TranslationCache; }
+  catch { return {}; }
+};
+
+const canTranslateText = (value: string) => {
+  const normalized = value.trim();
+  return normalized.length > 1 && normalized.length < 900 && /[А-Яа-яЁё]/.test(normalized) && !/^\d+[\d\s.,/%:+-]*$/.test(normalized);
+};
 
 export const LanguageProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [language, setLanguage] = useState<AppLanguage>(() => (localStorage.getItem(STORAGE_KEY) as AppLanguage) || 'ru');
   const originalText = useRef(new WeakMap<Text, string>());
+  const translationCache = useRef<TranslationCache>(readTranslationCache());
+  const pendingTranslation = useRef(new Set<string>());
   useEffect(() => { localStorage.setItem(STORAGE_KEY, language); document.documentElement.lang = language === 'kk' ? 'kk' : language; }, [language]);
   useEffect(() => {
+    let timer: number | undefined;
+    const nodesBySource = new Map<string, Text[]>();
+    const isIgnoredNode = (node: Text) => {
+      const parent = node.parentElement;
+      return !parent || ['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA'].includes(parent.tagName) || Boolean(parent.closest('[data-no-auto-translate]'));
+    };
+    const applyTranslation = (node: Text, source: string) => {
+      const staticTranslation = language === 'ru' ? undefined : legacyCopy[source.trim()]?.[language];
+      const cachedTranslation = translationCache.current[language]?.[source];
+      const translation = staticTranslation || cachedTranslation;
+      if (language === 'ru') node.nodeValue = source;
+      else if (translation) node.nodeValue = source.replace(source.trim(), translation);
+    };
+    const requestTranslations = async () => {
+      if (language === 'ru') return;
+      const sources = [...nodesBySource.keys()].filter(source => !legacyCopy[source.trim()]?.[language] && !translationCache.current[language]?.[source] && !pendingTranslation.current.has(`${language}:${source}`));
+      if (!sources.length) return;
+      const chunks = Array.from({ length: Math.ceil(sources.length / 30) }, (_, index) => sources.slice(index * 30, index * 30 + 30));
+      for (const chunk of chunks) {
+        chunk.forEach(source => pendingTranslation.current.add(`${language}:${source}`));
+        try {
+          const response = await fetch('/api/translate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ language, texts: chunk }) });
+          const data = await response.json() as { translations?: string[] };
+          if (!response.ok || !Array.isArray(data.translations)) continue;
+          const next = { ...(translationCache.current[language] || {}) };
+          chunk.forEach((source, index) => { if (data.translations?.[index]) next[source] = data.translations[index]; });
+          translationCache.current = { ...translationCache.current, [language]: next };
+          localStorage.setItem(TRANSLATION_CACHE_KEY, JSON.stringify(translationCache.current));
+          chunk.forEach(source => nodesBySource.get(source)?.forEach(node => {
+            if (originalText.current.get(node) === source) applyTranslation(node, source);
+          }));
+        } catch {
+          // The exact UI dictionary remains available when the optional translation service is unavailable.
+        } finally {
+          chunk.forEach(source => pendingTranslation.current.delete(`${language}:${source}`));
+        }
+      }
+    };
+    const scheduleRequest = () => {
+      if (timer) window.clearTimeout(timer);
+      timer = window.setTimeout(() => { void requestTranslations(); }, 120);
+    };
     const translateNode = (node: Text) => {
+      if (isIgnoredNode(node)) return;
       const original = originalText.current.get(node) ?? node.nodeValue ?? '';
       originalText.current.set(node, original);
-      const translated = language === 'ru' ? original : legacyCopy[original.trim()]?.[language];
-      if (translated) node.nodeValue = original.replace(original.trim(), translated);
-      else if (language === 'ru') node.nodeValue = original;
+      applyTranslation(node, original);
+      if (language !== 'ru' && canTranslateText(original) && !legacyCopy[original.trim()]?.[language] && !translationCache.current[language]?.[original]) {
+        const nodes = nodesBySource.get(original) || [];
+        nodes.push(node);
+        nodesBySource.set(original, nodes);
+      }
     };
     const translateTree = (root: Node) => {
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
@@ -101,9 +161,13 @@ export const LanguageProvider: React.FC<React.PropsWithChildren> = ({ children }
       while ((node = walker.nextNode())) translateNode(node as Text);
     };
     translateTree(document.body);
-    const observer = new MutationObserver(records => records.forEach(record => record.addedNodes.forEach(node => translateTree(node))));
+    scheduleRequest();
+    const observer = new MutationObserver(records => {
+      records.forEach(record => record.addedNodes.forEach(node => translateTree(node)));
+      scheduleRequest();
+    });
     observer.observe(document.body, { childList: true, subtree: true });
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); if (timer) window.clearTimeout(timer); };
   }, [language]);
   const value = useMemo(() => ({ language, setLanguage, t: (key: keyof typeof dictionaries.ru) => dictionaries[language][key] || dictionaries.ru[key] }), [language]);
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;

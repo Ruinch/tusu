@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { UNIVERSITIES } from '../../data/universities';
 import {
   X,
@@ -10,6 +11,7 @@ import {
 
 export const EssayAdvisorModal: React.FC = () => {
   const { isEssayModalOpen, setIsEssayModalOpen, profile, selectedUniForDetail } = useApp();
+  const { language } = useLanguage();
   const [copied, setCopied] = useState(false);
   const [selectedUniId, setSelectedUniId] = useState<string>(() => {
     return selectedUniForDetail?.id || UNIVERSITIES[0].id;
@@ -19,7 +21,18 @@ export const EssayAdvisorModal: React.FC = () => {
 
   const currentUni = UNIVERSITIES.find(u => u.id === selectedUniId) || UNIVERSITIES[0];
 
-  const essayStructure = [
+  const copy = language === 'kk' ? { title: 'Мотивациялық эссе бойынша AI-кеңесші', subtitle: 'Таңдалған университетке арналған Personal Statement-тің 4 бөлімді құрылымы', program: 'Бағдарлама:', principle: 'ҚАБЫЛДАУ КОМИССИЯСЫНЫҢ НЕГІЗГІ ҚАҒИДАСЫ:', principleText: 'Қабылдау комиссиясы үш сұраққа жауап іздейді: «Неліктен осы студент?», «Неліктен біздің университет?» және «Оның мақсаты қандай?». Жалпы сөздерден аулақ болып, әр ойды өлшенетін нәтижемен дәлелдеңіз.', copied: 'Аралық сақтағышқа көшірілді', copy: 'Үлгіні көшіру', close: 'Жабу', goal: 'МАҚСАТ:' } : language === 'en' ? { title: 'AI motivation-essay advisor', subtitle: 'A four-part Personal Statement framework for your selected university', program: 'Programme:', principle: 'CORE ADMISSIONS PRINCIPLE:', principleText: 'The admissions committee looks for answers to three questions: “Why this student?”, “Why our university?” and “What is their goal?”. Avoid generic claims and support every point with a measurable outcome.', copied: 'Copied to clipboard', copy: 'Copy template', close: 'Close', goal: 'GOAL:' } : { title: 'AI-советник по мотивационному эссе', subtitle: '4-частная структура Personal Statement под выбранный университет', program: 'Программа:', principle: 'ГЛАВНЫЙ ПРИНЦИП КОМИССИИ:', principleText: 'Приемная комиссия ищет ответ на 3 вопроса: «Почему этот студент?», «Почему именно наш вуз?» и «Какова его цель?». Избегайте общих фраз и подтверждайте каждый тезис измеримым результатом.', copied: 'Скопировано в буфер', copy: 'Скопировать шаблон', close: 'Закрыть', goal: 'ЦЕЛЬ:' };
+  const essayStructure = language === 'kk' ? [
+    { section: '01 / Академиялық қызығушылықтың бастауы (10–15%)', goal: 'Қызығушылықты нақты мәселе немесе pet-жоба арқылы көрсетіңіз; «бала кезден компьютерді жақсы көремін» деген жалпы сөзден аулақ болыңыз.', example: `«Мектеп хакатонында деректерді талдауды автоматтандыру үстінде машиналық оқыту модельдерінің ресурстарды қалай оңтайландыратынын көрдім... ${currentUni.programName} бағдарламасына қызығушылығым сенімді қолданбалы шешімдер құру ниетінен туды...»` },
+    { section: '02 / Академиялық және практикалық негіз (35–40%)', goal: 'Селективті бағдарламаға базаңыз барын дәлелдеңіз: олимпиадалар, жобалар, курстар, GPA.', example: `«Математиканы тереңдетіп оқу (GPA ${profile.gpa.toFixed(2)}) олимпиада жүлдегері болуға көмектесті. Өз жобамда Python және деректер базасын қолданып, өнімділікті оңтайландыру мәселелерін шештім...»` },
+    { section: `03 / Неліктен дәл ${currentUni.name}? (25–30%)`, goal: 'Нақтылық: профессорлар, зертханалар, университеттің дуалды модульдері. Оқу жоспарын терең зерттегеніңізді көрсетіңіз.', example: `«${currentUni.name} университетінде мені интеллектуалды жүйелер зертханасы және таратылған есептеулер модулі ерекше қызықтырады. ${currentUni.city} қаласындағы индустриялық хабтардағы тағылымдамалар мүмкіндігі жоспарларыма сай келеді...»` },
+    { section: '04 / Ұзақ мерзімді үлес және мансап көрінісі (15–20%)', goal: 'Оқуды бітіргеннен кейін кім болатыныңызды және қоғам мен индустрияға қандай пайда әкелетініңізді түсіндіріңіз.', example: '«Бакалавриатты аяқтағаннан кейін технологиялық инфрақұрылымды дамыту және ғылым мен финтехке арналған масштабталатын жүйелерді жасау бағытында жұмыс істеуді жоспарлаймын...»' }
+  ] : language === 'en' ? [
+    { section: '01 / Hook and origin of academic interest (10–15%)', goal: 'Show the spark through a specific problem or project, not a generic “I have loved computers since childhood”.', example: `“While automating data analysis at a school hackathon, I saw how machine-learning models optimise resource allocation… My interest in ${currentUni.programName} grew from a desire to build reliable applied solutions…”` },
+    { section: '02 / Academic and practical foundation (35–40%)', goal: 'Show that you have a foundation for a selective programme: olympiads, projects, courses and GPA.', example: `“Advanced mathematics study (GPA ${profile.gpa.toFixed(2)}) helped me become an olympiad prize-winner. In my project, I used Python and databases while solving performance-optimisation challenges…”` },
+    { section: `03 / Why ${currentUni.name}? (25–30%)`, goal: 'Be specific: professors, laboratories and dual modules. Show that you have researched the curriculum deeply.', example: `“At ${currentUni.name}, I am especially drawn to the intelligent-systems laboratory and distributed-computing module. Internship opportunities in ${currentUni.city} industry hubs align perfectly with my plans…”` },
+    { section: '04 / Long-term contribution and career vision (15–20%)', goal: 'Explain who you will become after graduation and the value you will bring to industry and society.', example: '“After completing my bachelor’s degree, I plan to develop technology infrastructure and build scalable systems for science and fintech…”' }
+  ] : [
     {
       section: '01 / Крючок и происхождение академического интереса (10-15%)',
       goal: 'Показать искру интереса через конкретную проблему или пет-проект, а не банальное «я люблю компьютеры с детства».',
@@ -42,7 +55,7 @@ export const EssayAdvisorModal: React.FC = () => {
     }
   ];
 
-  const fullTextToCopy = essayStructure.map(s => `${s.section}\nЦЕЛЬ: ${s.goal}\nПРИМЕР:\n${s.example}\n`).join('\n---\n\n');
+  const fullTextToCopy = essayStructure.map(s => `${s.section}\n${copy.goal} ${s.goal}\n${language === 'en' ? 'EXAMPLE:' : language === 'kk' ? 'МЫСАЛ:' : 'ПРИМЕР:'}\n${s.example}\n`).join('\n---\n\n');
 
   const handleCopy = () => {
     navigator.clipboard.writeText(fullTextToCopy);
@@ -59,11 +72,11 @@ export const EssayAdvisorModal: React.FC = () => {
             <FileText className="w-5 h-5 text-zinc-300" />
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-white">AI-советник по мотивационному эссе</h3>
+                <h3 className="text-base font-bold text-white">{copy.title}</h3>
                 <span className="text-[10px] font-mono bg-zinc-800 text-zinc-300 px-1.5 py-0.5 rounded border border-zinc-700">SOP Framework</span>
               </div>
               <p className="text-xs text-zinc-400 mt-0.5">
-                4-частная структура Personal Statement под выбранный университет
+                {copy.subtitle}
               </p>
             </div>
           </div>
@@ -78,7 +91,7 @@ export const EssayAdvisorModal: React.FC = () => {
 
         {/* University Selector */}
         <div className="px-5 py-2.5 bg-zinc-950/40 border-b border-zinc-800 flex items-center gap-3">
-          <span className="text-xs font-mono text-zinc-400">Программа:</span>
+          <span className="text-xs font-mono text-zinc-400">{copy.program}</span>
           <select
             value={selectedUniId}
             onChange={(e) => setSelectedUniId(e.target.value)}
@@ -96,10 +109,10 @@ export const EssayAdvisorModal: React.FC = () => {
         <div className="p-5 overflow-y-auto space-y-4 text-xs text-zinc-300">
           <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-1">
             <div className="font-mono text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">
-              Главный принцип комиссии:
+              {copy.principle}
             </div>
             <p className="text-zinc-300 leading-relaxed">
-              Приемная комиссия ищет ответ на 3 вопроса: «Почему этот студент?», «Почему именно наш вуз?» и «Какова его цель?». Избегайте общих фраз и подтверждайте каждый тезис измеримым результатом.
+              {copy.principleText}
             </p>
           </div>
 
@@ -130,14 +143,14 @@ export const EssayAdvisorModal: React.FC = () => {
             className="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-medium border border-zinc-700 flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-zinc-400" />}
-            <span>{copied ? 'Скопировано в буфер' : 'Скопировать шаблон'}</span>
+            <span>{copied ? copy.copied : copy.copy}</span>
           </button>
 
           <button
             onClick={() => setIsEssayModalOpen(false)}
             className="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold transition-colors cursor-pointer"
           >
-            Закрыть
+            {copy.close}
           </button>
         </div>
       </div>
